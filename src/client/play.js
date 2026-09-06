@@ -11,8 +11,8 @@ module.exports = function (client, options) {
     }
   })
 
-  // Every login packet starts a fresh chat session (new session UUID, message index 0)
-  // with the same profile key pair, as the vanilla client does after a reconfiguration
+  // Every login packet must start a fresh chat session (new session UUID, message
+  // index 0) with the same profile key pair
   client.on('login', (packet) => {
     if (packet.enforcesSecureChat) client.serverFeatures.enforcesSecureChat = packet.enforcesSecureChat
     const mcData = require('minecraft-data')(client.version)
@@ -56,14 +56,10 @@ module.exports = function (client, options) {
         client.write('configuration_acknowledged', {})
       }
       client.state = states.CONFIGURATION
-      // The vanilla client sends its brand and then Client Information right after
-      // login_acknowledged, and only those once: re-entering configuration from play
-      // is acknowledged with nothing else. Some servers (e.g. Hypixel) wait for the
-      // Client Information before sending finish_configuration and close the socket
-      // otherwise. Defaults are the vanilla ones and can be overridden per-field via
-      // the `clientSettings` option; a client that also sends Client Information in
-      // the play state (e.g. mineflayer on its 'login' event) still takes precedence
-      // there, exactly as the vanilla client re-sends settings. (#3623)
+      // Brand then Client Information are sent once per connection, on the first entry
+      // into configuration; re-entering configuration from play sends nothing else. Some
+      // servers (e.g. Hypixel) close the socket unless Client Information arrives before
+      // they send finish_configuration
       if (!sentClientInformation) {
         sentClientInformation = true
         client.write('custom_payload', {
@@ -83,8 +79,8 @@ module.exports = function (client, options) {
           particleStatus: clientSettings.particleStatus ?? 'all'
         })
       }
-      // Vanilla answers with the server's packs it has locally; a pack in the reply makes
-      // the server skip that pack's registry entries, so nothing is known by default
+      // The server omits the registry entries of every pack in the reply, so a pack may
+      // only be listed when its data is available locally
       client.once('select_known_packs', (packet) => {
         const knownPacks = options.knownPacks ?? []
         client.write('select_known_packs', {

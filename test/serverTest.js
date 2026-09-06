@@ -29,8 +29,8 @@ for (const supportedVersion of mc.supportedVersions) {
   let PORT
   const mcData = require('minecraft-data')(supportedVersion)
   const version = mcData.version
-  // minecraft-data 1.21.8 declares cookie_response.value as a non-optional ByteArray, so a
-  // stored cookie cannot be echoed there
+  // minecraft-data 1.21.8 declares cookie_response.value as a bare ByteArray, so an absent
+  // value cannot be sent there
   const hasCookies = 'packet_common_cookie_request' in mcData.protocol.types &&
     mcData.protocol.types.packet_common_cookie_response[1][1].type[0] === 'option'
 
@@ -586,7 +586,7 @@ for (const supportedVersion of mc.supportedVersions) {
             if (client.state !== mc.states.CONFIGURATION) return
             received.push({ settings: packet })
           })
-          // The nmp server does not implement re-configuration itself
+          // The nmp server does not handle configuration_acknowledged; the state is moved by hand
           client.on('configuration_acknowledged', () => {
             client.state = mc.states.CONFIGURATION
             client.once('finish_configuration', () => {
@@ -669,8 +669,8 @@ for (const supportedVersion of mc.supportedVersions) {
     if (hasCookies) {
       it('answers login cookie requests from the cookies option', function (done) {
         const seeded = Buffer.from('seeded-cookie')
-        // A vanilla server only enables compression once the login cookie exchange is
-        // over, so drive the login state by hand instead of through mc.createServer
+        // Login cookies must be exchanged before set_compression; mc.createServer sends
+        // set_compression first, so the login state is driven by hand
         const server = net.createServer((socket) => {
           const client = new mc.Client(true, version.minecraftVersion)
           client.setSocket(socket)
