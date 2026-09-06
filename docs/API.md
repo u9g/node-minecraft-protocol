@@ -147,6 +147,7 @@ Returns a `Client` instance and perform login.
  * id : a numeric client id used for referring to multiple clients in a server
  * validateChannelProtocol (optional) : whether or not to enable protocol validation for custom protocols using plugin channels. Defaults to true
  * disableChatSigning (optional) : Don't try obtaining chat signing keys from Mojang (1.19+)
+ * cookies (optional) : cookies to answer `cookie_request` packets with, as an object or Map of key to Buffer (1.20.5+). Pass the previous connection's `client._cookies` when following a `transfer` packet, like the vanilla client does
  * clientSettings (optional) : Client Information (settings) sent to the server during the configuration phase (1.20.2+). All fields are optional and default to vanilla-safe values:
    * locale : language/locale string, default `'en_us'`
    * viewDistance : view distance in chunks, default `10`
@@ -167,6 +168,10 @@ Returns a `Client` instance and perform login.
 
 Create a new client, if `isServer` is true then it is a server-side client, otherwise it's a client-side client.
 Takes a minecraft `version` as second argument.
+
+### client._cookies
+
+Map of cookies (key to Buffer) received through `store_cookie` packets, seeded from the `cookies` option (1.20.5+). The client answers `cookie_request` packets from it in the login, configuration and play states, replying with an absent value for unknown cookies, like the vanilla client.
 
 ### client.write(name, params)
 
