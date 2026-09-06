@@ -11,7 +11,9 @@ module.exports = function (client, options) {
     }
   })
 
-  client.once('login', (packet) => {
+  // Every login packet starts a fresh chat session (new session UUID, message index 0)
+  // with the same profile key pair, as the vanilla client does after a reconfiguration
+  client.on('login', (packet) => {
     if (packet.enforcesSecureChat) client.serverFeatures.enforcesSecureChat = packet.enforcesSecureChat
     const mcData = require('minecraft-data')(client.version)
     if (mcData.supportFeature('useChatSessions') && client.profileKeys && client.cipher && client.session.selectedProfile.id === client.uuid.replace(/-/g, '')) {
