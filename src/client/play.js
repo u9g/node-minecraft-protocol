@@ -83,8 +83,14 @@ module.exports = function (client, options) {
           particleStatus: clientSettings.particleStatus ?? 'all'
         })
       }
-      client.once('select_known_packs', () => {
-        client.write('select_known_packs', { packs: [] })
+      // Vanilla answers with the server's packs it has locally; a pack in the reply makes
+      // the server skip that pack's registry entries, so nothing is known by default
+      client.once('select_known_packs', (packet) => {
+        const knownPacks = options.knownPacks ?? []
+        client.write('select_known_packs', {
+          packs: packet.packs.filter(pack => knownPacks.some(known =>
+            known.namespace === pack.namespace && known.id === pack.id && known.version === pack.version))
+        })
       })
       client.once('code_of_conduct', () => {
         client.write('accept_code_of_conduct', {})

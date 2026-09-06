@@ -630,6 +630,42 @@ for (const supportedVersion of mc.supportedVersions) {
       })
     }
 
+    if ('packet_common_select_known_packs' in mcData.protocol.types) {
+      it('selects the known packs it shares with the server', function (done) {
+        const core = { namespace: 'minecraft', id: 'core', version: version.minecraftVersion }
+        const server = mc.createServer({
+          'online-mode': false,
+          version: version.minecraftVersion,
+          port: PORT
+        })
+        let reply
+        server.on('connection', function (client) {
+          client.on('select_known_packs', (packet) => {
+            reply = packet.packs
+          })
+          // Runs before the login plugin's own login_acknowledged handler
+          client.once('login_acknowledged', () => {
+            client.state = mc.states.CONFIGURATION
+            client.write('select_known_packs', { packs: [core, { namespace: 'test', id: 'server-only', version: '1' }] })
+          })
+        })
+        server.on('playerJoin', function () {
+          assert.deepStrictEqual(reply, [core])
+          server.close()
+        })
+        server.on('close', done)
+        server.on('listening', function () {
+          mc.createClient({
+            username: 'packPlayer',
+            host: '127.0.0.1',
+            version: version.minecraftVersion,
+            port: PORT,
+            knownPacks: [core, { namespace: 'test', id: 'client-only', version: '1' }]
+          })
+        })
+      })
+    }
+
     if (hasCookies) {
       it('answers login cookie requests from the cookies option', function (done) {
         const seeded = Buffer.from('seeded-cookie')

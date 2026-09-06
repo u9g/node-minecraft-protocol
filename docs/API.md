@@ -159,6 +159,7 @@ Returns a `Client` instance and perform login.
    * enableTextFiltering : default `false`
    * enableServerListing : whether the player appears in server status player samples, default `true`
    * particleStatus : `'all'`, `'decreased'` or `'minimal'` (1.21.3+), default `'all'`
+ * knownPacks (optional) : data packs the client has locally, as an array of `{ namespace, id, version }` (1.20.5+). The reply to the server's `select_known_packs` is the part of the server's list found here, like the vanilla client, which knows `{ namespace: 'minecraft', id: 'core', version: '<game version>' }`. The server omits the registry entries of the packs in the reply, so the default is `[]` and the server sends its full registry data
  * realms : An object which should contain one of the following properties: `realmId` or `pickRealm`. When defined will attempt to join a Realm without needing to specify host/port. **The authenticated account must either own the Realm or have been invited to it**
    * realmId : The id of the Realm to join.
    * pickRealm(realms) : A function which will have an array of the user Realms (joined/owned) passed to it. The function should return a Realm.
