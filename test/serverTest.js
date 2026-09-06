@@ -569,6 +569,67 @@ for (const supportedVersion of mc.supportedVersions) {
       })
     })
 
+    if (mcData.supportFeature('hasConfigurationState')) {
+      it('sends brand then client information once when entering configuration', function (done) {
+        const server = mc.createServer({
+          'online-mode': false,
+          version: version.minecraftVersion,
+          port: PORT
+        })
+        const received = []
+        server.on('connection', function (client) {
+          client.on('custom_payload', (packet) => {
+            if (client.state !== mc.states.CONFIGURATION) return
+            received.push({ channel: packet.channel, brand: packet.data.subarray(1).toString('utf8'), lengthPrefix: packet.data[0] })
+          })
+          client.on('settings', (packet) => {
+            if (client.state !== mc.states.CONFIGURATION) return
+            received.push({ settings: packet })
+          })
+          // The nmp server does not implement re-configuration itself
+          client.on('configuration_acknowledged', () => {
+            client.state = mc.states.CONFIGURATION
+            client.once('finish_configuration', () => {
+              client.state = mc.states.PLAY
+              assert.deepStrictEqual(received, [
+                { channel: 'minecraft:brand', brand: 'nmp-test', lengthPrefix: 8 },
+                {
+                  settings: {
+                    locale: 'en_us',
+                    viewDistance: 7,
+                    chatFlags: 0,
+                    chatColors: true,
+                    skinParts: 127,
+                    mainHand: 1,
+                    enableTextFiltering: false,
+                    enableServerListing: true,
+                    ...(mcData.version.version >= 768 ? { particleStatus: 'all' } : {})
+                  }
+                }
+              ])
+              server.close()
+            })
+            client.write('finish_configuration', {})
+          })
+        })
+        server.on('playerJoin', function (client) {
+          client.write('login', loginPacket(client, server))
+          client.write('start_configuration', {})
+        })
+        server.on('close', done)
+        server.on('listening', function () {
+          mc.createClient({
+            username: 'configPlayer',
+            host: '127.0.0.1',
+            version: version.minecraftVersion,
+            port: PORT,
+            brand: 'nmp-test',
+            clientSettings: { viewDistance: 7 }
+          })
+        })
+      })
+    }
+
     if (hasCookies) {
       it('answers login cookie requests from the cookies option', function (done) {
         const seeded = Buffer.from('seeded-cookie')

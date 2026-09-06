@@ -148,9 +148,10 @@ Returns a `Client` instance and perform login.
  * validateChannelProtocol (optional) : whether or not to enable protocol validation for custom protocols using plugin channels. Defaults to true
  * disableChatSigning (optional) : Don't try obtaining chat signing keys from Mojang (1.19+)
  * cookies (optional) : cookies to answer `cookie_request` packets with, as an object or Map of key to Buffer (1.20.5+). Pass the previous connection's `client._cookies` when following a `transfer` packet, like the vanilla client does
- * clientSettings (optional) : Client Information (settings) sent to the server during the configuration phase (1.20.2+). All fields are optional and default to vanilla-safe values:
+ * brand (optional) : client brand sent on the `minecraft:brand` plugin channel when first entering the configuration phase (1.20.2+), default `'vanilla'`
+ * clientSettings (optional) : Client Information (settings) sent to the server, after the brand, when first entering the configuration phase (1.20.2+); like the vanilla client, they are not re-sent when a server sends the client back to configuration. All fields are optional and default to the vanilla values:
    * locale : language/locale string, default `'en_us'`
-   * viewDistance : view distance in chunks, default `10`
+   * viewDistance : view distance in chunks, default `12`
    * chatFlags : chat mode, `0` = enabled, `1` = commands only, `2` = hidden, default `0`
    * chatColors : whether chat colors are enabled, default `true`
    * skinParts : displayed skin parts bitmask, default `127`
